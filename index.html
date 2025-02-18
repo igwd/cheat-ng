@@ -86,7 +86,7 @@
                     try {
                         console.log("Mengirim data ke server:", { bobot, nilaiAkhir: this.nilaiAkhir });
 
-                        let response = await fetch("http://localhost:3000/hitung-kombinasi", {
+                        let response = await fetch("https://cheat-ng.igwd-dev.web.id/hitung-kombinasi", {
                             method: "POST",
                             headers: { "Content-Type": "application/json" },
                             body: JSON.stringify({ bobot, nilaiAkhir: this.nilaiAkhir })

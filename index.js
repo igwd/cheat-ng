@@ -71,7 +71,9 @@ app.post("/hitung-kombinasi", (req, res) => {
         }
 
         // Konversi bobot dari string ke array angka
-        bobot = bobot.split(",").map(num => parseFloat(num.trim()));
+        //bobot = bobot.split(",").map(num => parseFloat(num.trim()));
+        //nilaiAkhir = parseFloat(nilaiAkhir);
+        bobot = JSON.parse(bobot).map(num => parseFloat(num));
         nilaiAkhir = parseFloat(nilaiAkhir);
 
         console.log("Bobot setelah konversi:", bobot);
