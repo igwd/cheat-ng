@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tabel Nilai Mahasiswa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.10.5/dist/cdn.min.js" defer></script>
+</head>
+<body class="p-8 bg-gray-100" x-data="nilaiApp()">
+    <div class="max-w-5xl mx-auto bg-white p-6 rounded shadow">
+        <h2 class="text-xl font-semibold mb-4">Tabel Nilai Mahasiswa</h2>
+        
+        <div class="mb-4">
+            <label class="block font-medium">Bobot Kriteria</label>
+            <table class="w-full mt-2 border-collapse border border-gray-300">
+                <thead>
+                    <tr class="bg-gray-200">
+                        <th class="border p-2">Kriteria</th>
+                        <th class="border p-2">Bobot</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <template x-for="(item, index) in kriteria" :key="index">
+                        <tr>
+                            <td class="border p-2" x-text="item.nama"></td>
+                            <td class="border p-2">
+                                <input type="number" x-model="item.bobot" class="border p-1 w-full rounded">
+                            </td>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+        </div>
+        
+        <button @click="setBobot" class="bg-blue-500 text-white px-4 py-2 rounded">Simpan Bobot</button>
+        
+        <div class="mt-4">
+            <label class="block font-medium">Masukkan Nilai Akhir</label>
+            <input type="number" x-model="nilaiAkhir" class="border p-2 w-full rounded">
+            <button @click="kirimNilai" class="bg-green-500 text-white px-4 py-2 mt-2 rounded">Hitung Kombinasi</button>
+        </div>
+        
+        <table x-show="hasilKombinasi.length > 0" class="w-full mt-4 border-collapse border border-gray-300">
+            <thead>
+                <tr class="bg-gray-200">
+                    <th class="border p-2">Nilai Akhir</th>
+                    <th class="border p-2">Kombinasi</th>
+                </tr>
+            </thead>
+            <tbody>
+                <template x-for="(hasil, index) in hasilKombinasi" :key="index">
+                    <tr class="text-center">
+                        <td class="border p-2" x-text="hasil.nilai"></td>
+                        <td class="border p-2" x-text="hasil.kombinasi && hasil.kombinasi.length > 0 ? hasil.kombinasi.join(', ') : 'Tidak ditemukan'"></td>
+                    </tr>
+                </template>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        function nilaiApp() {
+            return {
+                kriteria: [
+                    { nama: "Aktivitas Partisipatif", bobot: 10 },
+                    { nama: "Hasil Proyek", bobot: 50 },
+                    { nama: "Ujian Akhir Semester", bobot: 15 },
+                    { nama: "Ujian Tengah Semester", bobot: 0 },
+                    { nama: "Quiz", bobot: 25 },
+                    { nama: "Tugas", bobot: 0 }
+                ],
+                nilaiAkhir: "",
+                hasilKombinasi: [],
+                setBobot() {
+                    let bobotArray = this.kriteria.map(item => item.bobot);
+                    localStorage.setItem("bobot", JSON.stringify(bobotArray));
+                    alert("Bobot disimpan!");
+                },
+                async kirimNilai() {
+                    let bobot = localStorage.getItem("bobot");
+                    if (!bobot) {
+                        alert("Silakan masukkan bobot terlebih dahulu!");
+                        return;
+                    }
+                    try {
+                        console.log("Mengirim data ke server:", { bobot, nilaiAkhir: this.nilaiAkhir });
+
+                        let response = await fetch("http://localhost:3000/hitung-kombinasi", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ bobot, nilaiAkhir: this.nilaiAkhir })
+                        });
+
+                        if (!response.ok) {
+                            throw new Error("Server error: " + response.statusText);
+                        }
+
+                        let data = await response.json();
+                        console.log("Respon dari server:", data);
+
+                        if (!data.kombinasi || !Array.isArray(data.kombinasi)) {
+                            alert("Respon tidak valid, kombinasi tidak ditemukan.");
+                            return;
+                        }
+
+                        this.hasilKombinasi.push({ nilai: this.nilaiAkhir, kombinasi: data.kombinasi });
+                        this.nilaiAkhir = ""; // Reset input nilai akhir
+                    } catch (error) {
+                        alert("Gagal mengambil data: " + error.message);
+                        console.error("Fetch error:", error);
+                    }
+                }
+            };
+        }
+    </script>
+</body>
+</html>
